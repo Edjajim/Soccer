@@ -50,9 +50,11 @@ CREATE TABLE LEAGUE_TEAM (
         PRIMARY KEY (LeagueId, TeamId),
 
     CONSTRAINT FK_LEAGUE_TEAM_League
-        FOREIGN KEY (LeagueId) REFERENCES League(Id),
+        FOREIGN KEY (LeagueId) REFERENCES League(Id)
+        ON DELETE CASCADE,
 
     CONSTRAINT FK_LEAGUE_TEAM_Team
         FOREIGN KEY (TeamId) REFERENCES Team(Id)
+        ON DELETE CASCADE
 );
 GO
