@@ -156,3 +156,4 @@ C:\Users\edjaj\Desktop\Proyectos\Soccer\Soccer.Api\obj\Debug\net10.0\refint\Socc
 C:\Users\edjaj\Desktop\Proyectos\Soccer\Soccer.Api\obj\Debug\net10.0\Soccer.Api.pdb
 C:\Users\edjaj\Desktop\Proyectos\Soccer\Soccer.Api\obj\Debug\net10.0\Soccer.Api.genruntimeconfig.cache
 C:\Users\edjaj\Desktop\Proyectos\Soccer\Soccer.Api\obj\Debug\net10.0\ref\Soccer.Api.dll
+C:\Users\edjaj\Desktop\Proyectos\Soccer\Soccer.Api\obj\Debug\net10.0\Soccer.Api.sourcelink.json

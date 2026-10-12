@@ -141,24 +141,28 @@ namespace Soccer.Api.Controllers
                 });
         }
 
-        // DELETE: api/LeagueTeam/5
+        // DELETE: api/LeagueTeam
         /// <summary>
-        /// Endpoint para eliminar un LeagueTeam existente.
+        /// Elimina la relación entre un equipo y una liga.
         /// </summary>
-        /// <param name="id">ID del LeagueTeam que se desea eliminar.</param>
+        /// <param name="dto">Identificadores de la liga y del equipo.</param>
         /// <returns>204 si se elimina; 404 si no existe.</returns>
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLeagueTeam(int id)
+        [HttpDelete]
+        public async Task<IActionResult> DeleteLeagueTeam(
+            CreateLeagueTeamDto dto,
+            CancellationToken cancellationToken)
         {
-            var LeagueTeam = await _context.LeagueTeams.FindAsync(id);
+            var leagueTeam = await _context.LeagueTeams.FindAsync(
+                new object[] { dto.LeagueId, dto.TeamId },
+                cancellationToken);
 
-            if (LeagueTeam == null)
+            if (leagueTeam == null)
             {
                 return NotFound();
             }
 
-            _context.LeagueTeams.Remove(LeagueTeam);
-            await _context.SaveChangesAsync();
+            _context.LeagueTeams.Remove(leagueTeam);
+            await _context.SaveChangesAsync(cancellationToken);
 
             return NoContent();
         }
