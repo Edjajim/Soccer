@@ -18,21 +18,18 @@ namespace Soccer.Api.Controllers
             _context = context;
         }
 
-        
+
         // GET: api/LeagueTeam/League/5
         /// <summary>
-        /// Obtiene todos los equipos relacionados con una liga.
+        /// Obtiene todos los equipos inscritos en una liga específica.
         /// </summary>
-        /// <param name="id">
-        /// Identificador de la liga.
-        /// </param>
-        /// <returns>
-        /// Lista de equipos relacionados con la liga o NotFound si no existe la liga.
-        /// </returns>
+        /// <param name="id">Identificador de la liga de la que se desea consultar los equipos registrados</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Una lista de los equipos inscritos en la liga</returns>
         [HttpGet("League/{id}")]
-        public async Task<ActionResult<IEnumerable<Team>>> GetLeagueTeam(
-            int id,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult<IEnumerable<TeamDto>>> GetLeagueTeam(
+        int id,
+        CancellationToken cancellationToken)
         {
             var leagueExists = await _context.Leagues
                 .AnyAsync(l => l.Id == id, cancellationToken);
@@ -40,15 +37,23 @@ namespace Soccer.Api.Controllers
             if (!leagueExists)
                 return NotFound($"No existe una liga con el ID {id}.");
 
-            var teams = await _context.Teams
+            var teams = await _context.LeagueTeams
                 .AsNoTracking()
-                .Where(t => t.LeagueTeams.Any(lt => lt.LeagueId == id))
+                .Where(lt => lt.LeagueId == id)
+                .Select(lt => new TeamDto
+                {
+                    Id = lt.Team.Id,
+                    Name = lt.Team.Name,
+                    Country = lt.Team.Country,
+                    PlayersQuantity = lt.Team.PlayersQuantity,
+                    Enabled = lt.Team.Enabled
+                })
                 .ToListAsync(cancellationToken);
 
             return Ok(teams);
         }
 
-        
+
         // GET: api/LeagueTeam/Team/5
         /// <summary>
         /// Obtiene todas las ligas en las que está inscrito un equipo.
@@ -76,11 +81,13 @@ namespace Soccer.Api.Controllers
             return Ok(leagues);
         }
 
-        
+
         // POST: api/LeagueTeam
         /// <summary>
-        /// Relaciona un equipo con una liga.
+        /// Endpoint para inscribir un equipo en una liga.
         /// </summary>
+        /// <param name="dto">Utiliza el DTO para crear la relación entre la liga y el equipo.</param>
+        /// <returns>200 si se crea la relación correctamente; 400 si los datos son inválidos; 404 si la liga o el equipo no existen.</returns>
         [HttpPost]
         public async Task<ActionResult<LeagueTeam>> CreateLeagueTeam(
             CreateLeagueTeamDto dto)
@@ -133,7 +140,7 @@ namespace Soccer.Api.Controllers
                     leagueTeam.TeamId
                 });
         }
-        
+
         // DELETE: api/LeagueTeam/5
         /// <summary>
         /// Endpoint para eliminar un LeagueTeam existente.
