@@ -63,7 +63,18 @@
                 } @else {
                   <ul class="related-list">
                     @for (team of teamsForLeague(item.id); track team.id) {
-                      <li>{{ team.name }} - {{ team.country }}</li>
+                      <li class="related-list__item">
+                        <span>{{ team.name }} - {{ team.country }}</span>
+                        <button
+                          class="remove-relation-button"
+                          type="button"
+                          [disabled]="saving()"
+                          [attr.aria-label]="'Retirar a ' + team.name + ' de ' + item.name"
+                          (click)="openUnregisterModal(item, team)"
+                        >
+                          Retirar
+                        </button>
+                      </li>
                     }
                   </ul>
                 }
@@ -302,6 +313,63 @@
           </form>
         }
       }
+    </section>
+  </div>
+}
+
+@if (unregisterModalOpen()) {
+  <div class="modal-backdrop" role="presentation" (click)="closeUnregisterModal()">
+    <section
+      class="modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="unregister-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal__header">
+        <h2 id="unregister-title">Retirar equipo de la liga</h2>
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Cerrar ventana"
+          [disabled]="unregisterSaving()"
+          (click)="closeUnregisterModal()"
+        >
+          &times;
+        </button>
+      </header>
+
+      @if (unregisterLeague(); as league) {
+        @if (unregisterTeam(); as team) {
+          <p>
+            ¿Deseas retirar a <strong>{{ team.name }}</strong> de
+            <strong>{{ league.name }}</strong>?
+          </p>
+        }
+      }
+
+      @if (unregisterError()) {
+        <p class="message message--error">{{ unregisterError() }}</p>
+      }
+
+      <div class="modal__actions">
+        <button
+          class="cancel-button"
+          type="button"
+          [disabled]="unregisterSaving()"
+          (click)="closeUnregisterModal()"
+        >
+          Cancelar
+        </button>
+        <button
+          class="delete-button"
+          type="button"
+          [disabled]="unregisterSaving()"
+          (click)="confirmUnregister()"
+        >
+          {{ unregisterSaving() ? 'Retirando...' : 'Retirar equipo' }}
+        </button>
+      </div>
     </section>
   </div>
 }

@@ -25,4 +25,8 @@ export class LeagueTeamService {
   registerTeam(request: RegisterTeamRequest): Observable<void> {
     return this.http.post<void>(this.apiUrl, request);
   }
+
+  removeTeam(request: RegisterTeamRequest): Observable<void> {
+    return this.http.delete<void>(this.apiUrl, { body: request });
+  }
 }

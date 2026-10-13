@@ -71,6 +71,11 @@ export class Administration {
   protected readonly leagueTeams = signal<Record<number, Team[]>>({});
   protected readonly leagueTeamsLoading = signal<Record<number, boolean>>({});
   protected readonly leagueTeamsError = signal<Record<number, string>>({});
+  protected readonly unregisterModalOpen = signal(false);
+  protected readonly unregisterLeague = signal<League | null>(null);
+  protected readonly unregisterTeam = signal<Team | null>(null);
+  protected readonly unregisterSaving = signal(false);
+  protected readonly unregisterError = signal('');
   protected readonly registerModalOpen = signal(false);
   protected readonly registerLeague = signal<League | null>(null);
   protected readonly availableTeams = signal<Team[]>([]);
@@ -190,6 +195,54 @@ export class Administration {
       this.registerModalOpen.set(false);
       this.registerLeague.set(null);
     }
+  }
+
+  protected openUnregisterModal(league: League, team: Team): void {
+    this.unregisterLeague.set(league);
+    this.unregisterTeam.set(team);
+    this.unregisterError.set('');
+    this.unregisterModalOpen.set(true);
+  }
+
+  protected closeUnregisterModal(): void {
+    if (!this.unregisterSaving()) {
+      this.unregisterModalOpen.set(false);
+      this.unregisterLeague.set(null);
+      this.unregisterTeam.set(null);
+    }
+  }
+
+  protected confirmUnregister(): void {
+    const league = this.unregisterLeague();
+    const team = this.unregisterTeam();
+
+    if (!league || !team) {
+      return;
+    }
+
+    this.unregisterSaving.set(true);
+    this.unregisterError.set('');
+
+    this.leagueTeamService.removeTeam({
+      leagueId: league.id,
+      teamId: team.id
+    }).subscribe({
+      next: () => {
+        this.leagueTeams.update((teamsByLeague) => ({
+          ...teamsByLeague,
+          [league.id]: (teamsByLeague[league.id] ?? []).filter(
+            (currentTeam) => currentTeam.id !== team.id
+          )
+        }));
+        this.unregisterSaving.set(false);
+        this.closeUnregisterModal();
+      },
+      error: (error: unknown) => {
+        console.error('Error al retirar el equipo de la liga:', error);
+        this.unregisterError.set('No se pudo retirar el equipo de la liga.');
+        this.unregisterSaving.set(false);
+      }
+    });
   }
 
   protected registerTeam(): void {
