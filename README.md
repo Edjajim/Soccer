@@ -1,5 +1,9 @@
 # Soccer
 
+## Data Base
+This project contains a Script called 'create_db.sql' to create the data base and the tables needed for the correct functionality of the web app.
+
+## Front-end
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.26.
 
 ## Development server
@@ -57,3 +61,14 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Back-end
+This project was generated using ASP.NET CORE with Entity Framework Core for more efficient database management using ORM's.
+
+## Development server
+
+To start a local development server, run:
+
+```bash
+dotnet run
+```
