@@ -1,0 +1,288 @@
+<main class="administration">
+  <header class="administration__header">
+    <a routerLink="/" class="back-link">Volver al inicio</a>
+    <h1>{{ title }}</h1>
+    <button class="create-button" type="button" (click)="openCreateModal()">
+      Crear {{ type === 'leagues' ? 'liga' : 'equipo' }}
+    </button>
+  </header>
+
+  @if (loading()) {
+    <p class="message">Cargando {{ title.toLowerCase() }}...</p>
+  } @else if (error()) {
+    <p class="message message--error">
+      {{ errorMessage() }}
+    </p>
+  } @else {
+    @if (actionError()) {
+      <p class="message message--error">{{ actionError() }}</p>
+    }
+
+    @if (items().length === 0) {
+    <p class="message">No hay registros disponibles.</p>
+    } @else {
+      <section class="items" [attr.aria-label]="title">
+        @for (item of items(); track item.id) {
+          <article class="item-card">
+            <div class="item-card__header">
+              <h2>{{ item.name }}</h2>
+              <div class="item-card__actions">
+                <button
+                  class="icon-button"
+                  type="button"
+                  [attr.aria-label]="'Modificar ' + item.name"
+                  [disabled]="saving()"
+                  (click)="openEditModal(item)"
+                >
+                  <span aria-hidden="true">&#9998;</span>
+                </button>
+                <button
+                  class="icon-button icon-button--delete"
+                  type="button"
+                  [attr.aria-label]="'Eliminar ' + item.name"
+                  [disabled]="saving()"
+                  (click)="openDeleteModal(item)"
+                >
+                  <span aria-hidden="true">&#128465;</span>
+                </button>
+              </div>
+            </div>
+            <p>País: {{ item.country }}</p>
+
+            @if (isLeague(item)) {
+              <p>Inicio: {{ item.startDate }}</p>
+              <p>Fin: {{ item.endDate }}</p>
+              <button
+                class="register-button"
+                type="button"
+                [disabled]="saving()"
+                (click)="openRegisterModal(item)"
+              >
+                Registrar equipo
+              </button>
+            } @else {
+              <p>Jugadores: {{ item.playersQuantity }}</p>
+            }
+
+            @if (deleteModalOpen()) {
+              <div class="modal-backdrop" role="presentation" (click)="closeDeleteModal()">
+                <section
+                  class="modal delete-modal"
+                  role="alertdialog"
+                  aria-modal="true"
+                  aria-labelledby="delete-title"
+                  (click)="$event.stopPropagation()"
+                >
+                  <header class="modal__header">
+                    <h2 id="delete-title">Eliminar {{ type === 'leagues' ? 'liga' : 'equipo' }}</h2>
+                    <button
+                      class="close-button"
+                      type="button"
+                      aria-label="Cerrar ventana"
+                      [disabled]="saving()"
+                      (click)="closeDeleteModal()"
+                    >
+                      &times;
+                    </button>
+                  </header>
+
+                  @if (deleteTarget(); as target) {
+                    <p>
+                      ¿Deseas eliminar <strong>{{ target.name }}</strong>?
+                    </p>
+                    <p class="related-title">
+                      {{ type === 'leagues' ? 'Equipos registrados' : 'Ligas registradas' }}
+                    </p>
+
+                    @if (relatedLoading()) {
+                      <p class="message">Cargando relaciones...</p>
+                    } @else if (relatedError()) {
+                      <p class="message message--error">{{ relatedError() }}</p>
+                    } @else if (relatedNames().length === 0) {
+                      <p class="related-empty">No tiene relaciones registradas.</p>
+                    } @else {
+                      <ul class="related-list">
+                        @for (name of relatedNames(); track $index) {
+                          <li>{{ name }}</li>
+                        }
+                      </ul>
+                      <p class="related-warning">
+                        Primero elimina estas relaciones para poder borrar el registro.
+                      </p>
+                    }
+
+                    <div class="modal__actions">
+                      <button class="cancel-button" type="button" [disabled]="saving()" (click)="closeDeleteModal()">
+                        Cancelar
+                      </button>
+                      <button
+                        class="delete-button"
+                        type="button"
+                        [disabled]="saving() || relatedLoading() || relatedError() || relatedNames().length > 0"
+                        (click)="confirmDelete()"
+                      >
+                        {{ saving() ? 'Eliminando...' : 'Eliminar' }}
+                      </button>
+                    </div>
+                  }
+                </section>
+              </div>
+            }
+
+            <p>Estado: {{ item.enabled ? 'Activa' : 'Inactiva' }}</p>
+          </article>
+        }
+      </section>
+    }
+  }
+</main>
+
+@if (modalOpen()) {
+  <div class="modal-backdrop" role="presentation" (click)="closeCreateModal()">
+    <section
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'create-title'"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal__header">
+        <h2 id="create-title">
+          {{ editingItem() ? 'Modificar' : 'Crear' }}
+          {{ type === 'leagues' ? 'liga' : 'equipo' }}
+        </h2>
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Cerrar ventana"
+          [disabled]="saving()"
+          (click)="closeCreateModal()"
+        >
+          &times;
+        </button>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="createItem()">
+        <label for="name">Nombre</label>
+        <input id="name" type="text" formControlName="name" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <small class="field-error">
+            El nombre es obligatorio y debe tener al menos 2 letras.
+          </small>
+        }
+
+        <label for="country">País</label>
+        <input id="country" type="text" formControlName="country" />
+        @if (form.controls.country.invalid && form.controls.country.touched) {
+          <small class="field-error">
+            El país es obligatorio y debe tener al menos 2 letras.
+          </small>
+        }
+
+        @if (type === 'leagues') {
+          <label for="startDate">Fecha de inicio</label>
+          <input id="startDate" type="date" formControlName="startDate" />
+
+          <label for="endDate">Fecha de fin</label>
+          <input id="endDate" type="date" formControlName="endDate" />
+          @if (hasDateOrderError()) {
+            <small class="field-error">
+              La fecha de inicio no puede ser posterior a la fecha de fin.
+            </small>
+          }
+        } @else {
+          <label for="playersQuantity">Cantidad de jugadores</label>
+          <input id="playersQuantity" type="number" min="11" max="22" formControlName="playersQuantity" />
+          @if (form.controls.playersQuantity.invalid && form.controls.playersQuantity.touched) {
+            <small class="field-error">
+              La cantidad debe estar entre 11 y 22 jugadores.
+            </small>
+          }
+        }
+
+        <label class="checkbox-field">
+          <input type="checkbox" formControlName="enabled" />
+          Registro activo
+        </label>
+
+        @if (formError()) {
+          <p class="message message--error">{{ formError() }}</p>
+        }
+
+        <div class="modal__actions">
+          <button class="cancel-button" type="button" [disabled]="saving()" (click)="closeCreateModal()">
+            Cancelar
+          </button>
+          <button class="create-button" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Guardando...' : editingItem() ? 'Modificar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (registerModalOpen()) {
+  <div class="modal-backdrop" role="presentation" (click)="closeRegisterModal()">
+    <section
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="register-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal__header">
+        <h2 id="register-title">Registrar equipo</h2>
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Cerrar ventana"
+          [disabled]="registerSaving()"
+          (click)="closeRegisterModal()"
+        >
+          &times;
+        </button>
+      </header>
+
+      @if (registerLeague(); as league) {
+        <p>Selecciona un equipo para registrarlo en <strong>{{ league.name }}</strong>.</p>
+
+        @if (registerLoading()) {
+          <p class="message">Cargando equipos disponibles...</p>
+        } @else if (registerError()) {
+          <p class="message message--error">{{ registerError() }}</p>
+        } @else if (availableTeams().length === 0) {
+          <p class="related-empty">No hay equipos disponibles para registrar.</p>
+        } @else {
+          <form [formGroup]="registerForm" (ngSubmit)="registerTeam()">
+            <label for="teamId">Equipo</label>
+            <select id="teamId" formControlName="teamId">
+              <option [ngValue]="0">Selecciona un equipo</option>
+              @for (team of availableTeams(); track team.id) {
+                <option [ngValue]="team.id">{{ team.name }} - {{ team.country }}</option>
+              }
+            </select>
+
+            @if (registerForm.controls.teamId.invalid && registerForm.controls.teamId.touched) {
+              <small class="field-error">Selecciona un equipo.</small>
+            }
+
+            <div class="modal__actions">
+              <button
+                class="cancel-button"
+                type="button"
+                [disabled]="registerSaving()"
+                (click)="closeRegisterModal()"
+              >
+                Cancelar
+              </button>
+              <button class="create-button" type="submit" [disabled]="registerSaving()">
+                {{ registerSaving() ? 'Registrando...' : 'Registrar' }}
+              </button>
+            </div>
+          </form>
+        }
+      }
+    </section>
+  </div>
+}
