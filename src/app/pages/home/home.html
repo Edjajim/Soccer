@@ -1,0 +1,26 @@
+<main class="home">
+  <section class="hero" aria-labelledby="welcome-title">
+    <img
+      class="hero__image"
+      ngSrc="/fondo.jpg"
+      width="1920"
+      height="1080"
+      priority
+      alt="Cancha de fútbol"
+    />
+
+    <div class="hero__cards">
+      <article class="card">
+        <h1 id="welcome-title">Leagues</h1>
+        <p>Consulta y administra las ligas.</p>
+        <a class="card__action" routerLink="/leagues">Administrar ligas</a>
+      </article>
+
+      <article class="card">
+        <h2>Teams</h2>
+        <p>Consulta y administra los equipos.</p>
+        <a class="card__action" routerLink="/teams">Administrar equipos</a>
+      </article>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,105 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.home {
+  min-height: 100vh;
+}
+
+.hero {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 2rem;
+  position: relative;
+}
+
+.hero::after {
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0.2));
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+.hero__image {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: 0;
+}
+
+.hero__cards {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 48rem;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.card {
+  background: rgb(255 255 255 / 0.94);
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem rgb(0 0 0 / 0.2);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.card h1,
+.card h2 {
+  color: #143d2a;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  margin: 0 0 0.75rem;
+}
+
+.card p {
+  color: #2f3d35;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.card__action {
+  background: #17643b;
+  border-radius: 0.5rem;
+  color: #fff;
+  display: inline-block;
+  font-weight: 700;
+  padding: 0.7rem 1rem;
+  text-decoration: none;
+}
+
+.card__action:hover,
+.card__action:focus-visible {
+  background: #0f4729;
+}
+
+.card__action:focus-visible {
+  outline: 0.2rem solid #f5c542;
+  outline-offset: 0.2rem;
+}
+
+/*Me pareció interesante lo que tratamos en la entrevista sobre el diseño adaptativo así que investigué
+ cómo implementarlo y me pareció buena idea probarlo aquí con este pequeño detalle*/
+@media (max-width: 40rem) {
+  .hero {
+    padding: 1.25rem;
+  }
+
+  .hero__image {
+    height: 100vw;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    width: 100vh;
+  }
+
+  .hero__cards {
+    grid-template-columns: 1fr;
+    max-width: 24rem;
+  }
+}
