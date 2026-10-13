@@ -68,6 +68,9 @@ export class Administration {
   protected readonly relatedNames = signal<string[]>([]);
   protected readonly relatedLoading = signal(false);
   protected readonly relatedError = signal('');
+  protected readonly leagueTeams = signal<Record<number, Team[]>>({});
+  protected readonly leagueTeamsLoading = signal<Record<number, boolean>>({});
+  protected readonly leagueTeamsError = signal<Record<number, string>>({});
   protected readonly registerModalOpen = signal(false);
   protected readonly registerLeague = signal<League | null>(null);
   protected readonly availableTeams = signal<Team[]>([]);
@@ -203,6 +206,10 @@ export class Administration {
       teamId: this.registerForm.getRawValue().teamId
     }).subscribe({
       next: () => {
+        const league = this.registerLeague();
+        if (league) {
+          this.loadTeamsForLeague(league.id);
+        }
         this.registerSaving.set(false);
         this.closeRegisterModal();
       },
@@ -219,7 +226,7 @@ export class Administration {
   protected confirmDelete(): void {
     const item = this.deleteTarget();
 
-    if (!item || this.relatedLoading() || this.relatedError()) {
+    if (!item) {
       return;
     }
 
@@ -239,7 +246,7 @@ export class Administration {
       error: (error: unknown) => {
         console.error(`Error al eliminar ${this.type}:`, error);
         this.actionError.set(
-          `No se pudo eliminar la ${this.type === 'leagues' ? 'liga' : 'equipo'}. Puede tener relaciones registradas.`
+          `No se pudo eliminar la ${this.type === 'leagues' ? 'liga' : 'equipo'}. Inténtalo nuevamente.`
         );
         this.saving.set(false);
         this.closeDeleteModal();
@@ -296,6 +303,27 @@ export class Administration {
   private setItems(items: AdministrationItem[]): void {
     this.items.set(items);
     this.loading.set(false);
+
+    if (this.type === 'leagues') {
+      this.leagueTeams.set({});
+      this.leagueTeamsLoading.set({});
+      this.leagueTeamsError.set({});
+      for (const league of items) {
+        this.loadTeamsForLeague(league.id);
+      }
+    }
+  }
+
+  protected teamsForLeague(leagueId: number): Team[] {
+    return this.leagueTeams()[leagueId] ?? [];
+  }
+
+  protected teamsLoadingForLeague(leagueId: number): boolean {
+    return this.leagueTeamsLoading()[leagueId] ?? false;
+  }
+
+  protected teamsErrorForLeague(leagueId: number): string {
+    return this.leagueTeamsError()[leagueId] ?? '';
   }
 
   private setRelatedNames(names: string[]): void {
@@ -307,6 +335,30 @@ export class Administration {
     console.error(`Error al cargar relaciones de ${this.type}:`, error);
     this.relatedError.set('No se pudieron cargar las relaciones de este registro.');
     this.relatedLoading.set(false);
+  }
+
+  private loadTeamsForLeague(leagueId: number): void {
+    this.leagueTeamsLoading.update((states) => ({ ...states, [leagueId]: true }));
+    this.leagueTeamsError.update((errors) => {
+      const nextErrors = { ...errors };
+      delete nextErrors[leagueId];
+      return nextErrors;
+    });
+
+    this.leagueTeamService.getTeamsByLeague(leagueId).subscribe({
+      next: (teams) => {
+        this.leagueTeams.update((current) => ({ ...current, [leagueId]: teams }));
+        this.leagueTeamsLoading.update((states) => ({ ...states, [leagueId]: false }));
+      },
+      error: (error: unknown) => {
+        console.error(`Error al cargar equipos de la liga ${leagueId}:`, error);
+        this.leagueTeamsError.update((errors) => ({
+          ...errors,
+          [leagueId]: 'No se pudieron cargar los equipos de esta liga.'
+        }));
+        this.leagueTeamsLoading.update((states) => ({ ...states, [leagueId]: false }));
+      }
+    });
   }
 
   private configureForm(): void {

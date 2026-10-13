@@ -52,17 +52,27 @@
             @if (isLeague(item)) {
               <p>Inicio: {{ item.startDate }}</p>
               <p>Fin: {{ item.endDate }}</p>
-              <button
-                class="register-button"
-                type="button"
-                [disabled]="saving()"
-                (click)="openRegisterModal(item)"
-              >
-                Registrar equipo
-              </button>
+              <div class="league-teams">
+                <h3>Equipos registrados</h3>
+                @if (teamsLoadingForLeague(item.id)) {
+                  <p class="related-status">Cargando equipos...</p>
+                } @else if (teamsErrorForLeague(item.id)) {
+                  <p class="message message--error">{{ teamsErrorForLeague(item.id) }}</p>
+                } @else if (teamsForLeague(item.id).length === 0) {
+                  <p class="related-empty">No hay equipos registrados.</p>
+                } @else {
+                  <ul class="related-list">
+                    @for (team of teamsForLeague(item.id); track team.id) {
+                      <li>{{ team.name }} - {{ team.country }}</li>
+                    }
+                  </ul>
+                }
+              </div>
             } @else {
               <p>Jugadores: {{ item.playersQuantity }}</p>
             }
+
+            <p>Estado: {{ item.enabled ? 'Activa' : 'Inactiva' }}</p>
 
             @if (deleteModalOpen()) {
               <div class="modal-backdrop" role="presentation" (click)="closeDeleteModal()">
@@ -107,7 +117,7 @@
                         }
                       </ul>
                       <p class="related-warning">
-                        Primero elimina estas relaciones para poder borrar el registro.
+                        Las relaciones se eliminarán automáticamente.
                       </p>
                     }
 
@@ -118,7 +128,7 @@
                       <button
                         class="delete-button"
                         type="button"
-                        [disabled]="saving() || relatedLoading() || relatedError() || relatedNames().length > 0"
+                        [disabled]="saving()"
                         (click)="confirmDelete()"
                       >
                         {{ saving() ? 'Eliminando...' : 'Eliminar' }}
@@ -129,7 +139,16 @@
               </div>
             }
 
-            <p>Estado: {{ item.enabled ? 'Activa' : 'Inactiva' }}</p>
+            @if (isLeague(item)) {
+              <button
+                class="register-button"
+                type="button"
+                [disabled]="saving()"
+                (click)="openRegisterModal(item)"
+              >
+                Registrar equipo
+              </button>
+            }
           </article>
         }
       </section>
